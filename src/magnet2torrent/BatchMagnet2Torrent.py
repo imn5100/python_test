@@ -33,7 +33,7 @@ def magnet2t(link, tfile):
 
 
 def main():
-    f = open('magnet_list.txt', 'r')
+    f = open('config/magnet_list.txt', 'r')
     magnet_list = f.read().split('\\n')
     f.close()
     for i in range(len(magnet_list)):
