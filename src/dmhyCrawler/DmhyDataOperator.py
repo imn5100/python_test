@@ -30,7 +30,7 @@ class DmhyDataOperator(object):
         for data in datas:
             dmhydataObj = DmhyData(data)
             dmhydatas.append(dmhydataObj)
-        return dmhydatas;
+        return dmhydatas
 
     def get_one_bytitle(self, title):
         data = self.db.get_one("select *  from dmhy where title like %s order by time desc", (title,))
@@ -44,7 +44,7 @@ class DmhyDataOperator(object):
         for data in datas:
             dmhydataObj = DmhyData(data)
             dmhydatas.append(dmhydataObj)
-        return dmhydatas;
+        return dmhydatas
 
     def getby_id(self, id):
         sql = "select * from dmhy where id=%s"

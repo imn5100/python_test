@@ -118,7 +118,7 @@ if __name__ == '__main__':
     # 返回db 查询到的数据的数组
     data = db.get_all("select *  from dmhy where title like %s order by time desc", ('%半田%',))
 
-    print data;
+    print data
     # print db.put(
     #     "insert into  user(`username`, `password`, `nick`, `role`, `is_valid`, `create_time`, `op_time`) values(%s,%s,%s,%s,%s,%s,%s)",
     #     ("dog", "123", 'dog', '3', '1', '1450434160854', '1450434160854'))

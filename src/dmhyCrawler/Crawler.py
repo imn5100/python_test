@@ -6,14 +6,14 @@ import single_conn
 from DmhyDataOperator import *
 import DbOperator
 
-MAGNET_QUEUE = "Magnet_Queue";
-DOWNLOAD_START = "Download_Start_%s";
-DMHY_MAP_TITLES_MAGNET = "DMHY_Map_Titles_Magnet";
+MAGNET_QUEUE = "Magnet_Queue"
+DOWNLOAD_START = "Download_Start_%s"
+DMHY_MAP_TITLES_MAGNET = "DMHY_Map_Titles_Magnet"
 
 
 # 这里http请求存在超时问题。10秒 如果url无响应，则抛出timeout异常。（不包括响应的时间）
 def getDMHYHtml(url):
-    r = requests.get(url, headers=buildHeader(), timeout=10);
+    r = requests.get(url, headers=buildHeader(), timeout=10)
     return r.text
 
 
@@ -82,9 +82,9 @@ if __name__ == '__main__':
     text = getDMHYHtml("http://share.dmhy.org/topics/list/page/1")
     dmhydatas = analysisHtml(text)
     db = DbOperator.DatabaseConnection("127.0.0.1", user="root", passwd='xlsw', db='test')
-    dmop = DmhyDataOperator(db);
+    dmop = DmhyDataOperator(db)
     data_map = filter_datas(dmhydatas)
-    update_count = 0;
+    update_count = 0
     for data in data_map["update_list"]:
         db_data = dmop.get_one_bytitle(data.title)
         if db_data:
