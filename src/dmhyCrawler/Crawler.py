@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 import requests
 from BeautifulSoup import BeautifulSoup
-from src.dmhyCrawler.DbOperator import DatabaseConnection
-from src.dmhyCrawler.DmhyDataOperator import DmhyDataOperator
-from src.dmhyCrawler.DmhyDataOperator import DmhyData
+import redis
+import single_conn
+from DmhyDataOperator import *
+import DbOperator
+
+MAGNET_QUEUE = "Magnet_Queue";
+DOWNLOAD_START = "Download_Start_%s";
+DMHY_MAP_TITLES_MAGNET = "DMHY_Map_Titles_Magnet";
 
 
 # 这里http请求存在超时问题。10秒 如果url无响应，则抛出timeout异常。（不包括响应的时间）
@@ -59,9 +64,37 @@ def analysisHtml(text):
     return dmhy_datas
 
 
+def filter_datas(dmhy_datas):
+    r = redis.StrictRedis(host='localhost', port=6379, db=0)
+    add_list = []
+    update_list = []
+    add_map = {}
+    for data in dmhy_datas:
+        if r.hexists(DMHY_MAP_TITLES_MAGNET, data.title):
+            update_list.append(data)
+        else:
+            add_list.append(data)
+            add_map[data.title] = data.magnetLink
+    return {"add_list": add_list, "update_list": update_list, "add_map": add_map}
+
+
 if __name__ == '__main__':
     text = getDMHYHtml("http://share.dmhy.org/topics/list/page/1")
     dmhydatas = analysisHtml(text)
-    db = DatabaseConnection("127.0.0.1", user="root", passwd='xlsw', db='test')
+    db = DbOperator.DatabaseConnection("127.0.0.1", user="root", passwd='xlsw', db='test')
     dmop = DmhyDataOperator(db);
-    dmop.add_dmhydata_list(dmhydatas)
+    data_map = filter_datas(dmhydatas)
+    update_count = 0;
+    for data in data_map["update_list"]:
+        db_data = dmop.get_one_bytitle(data.title)
+        if db_data:
+            db_data.magnetLink = data.magnetLink
+            db_data.comNum = data.comNum
+            db_data.downNum = data.downNum
+            db_data.sendNum = data.sendNum
+            db_data.size = data.size
+            if dmop.update(db_data): update_count = update_count + 1
+    print ("update:" + str(update_count))
+    if data_map["add_map"]:
+        single_conn.HMSET(DMHY_MAP_TITLES_MAGNET, data_map["add_map"])
+        dmop.add_dmhydata_list(data_map["add_list"])

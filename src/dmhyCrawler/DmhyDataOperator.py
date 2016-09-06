@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from src.dmhyCrawler.DbOperator import DatabaseConnection
+from DbOperator import DatabaseConnection
 
 
 class DmhyDataOperator(object):
@@ -14,6 +14,8 @@ class DmhyDataOperator(object):
             dmhydata.downNum, dmhydata.comNum, dmhydata.publisher,))
 
     def add_dmhydata_list(self, dmhy_data_list):
+        if len(dmhy_data_list) <= 0:
+            return
         sql = "insert into  dmhy(`time`, `classi`, `title`, `magnetLink`, `size`, `seedNum`, `downNum`, `comNum`, `publisher`) values(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
         params = []
         for dmhydata in dmhy_data_list:
@@ -107,7 +109,7 @@ if __name__ == '__main__':
         print  (
             "time:" + obj.time + " classi:" + obj.classi + " title:" + obj.title + " size:" + obj.size + " sendNum:" + str(
                     obj.sendNum) + " downNum:" + str(obj.downNum) + " comNum:" + str(obj.comNum) + " sorted:" + str(
-                    obj.sendNum + obj.comNum + obj.downNum))
+                    obj.sendNum + obj.comNum + obj.downNum) + " magnet" + obj.magnetLink)
 
 
 def test_update(dmop):

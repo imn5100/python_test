@@ -88,3 +88,4 @@ ENV/
 
 # Rope project settings
 .ropeproject
+/src/magnet2torrent/torrent/code09.torrent
