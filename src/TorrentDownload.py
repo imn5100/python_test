@@ -1,24 +1,39 @@
+# -*- coding=utf-8 -*-
+from __future__ import print_function
 import libtorrent as lt
 import time
+import sys
 
-ses = lt.session()
-ses.listen_on(6881, 6891)
 
-e = lt.bdecode(open("0.torrent", 'rb').read())
-info = lt.torrent_info(e)
+def downloadByTorrent(torrentfile, savepath):
+    ses = lt.session()
+    ses.listen_on(6881, 6891)
+    info = lt.torrent_info(torrentfile)
+    h = ses.add_torrent({'ti': info, 'save_path': savepath})
+    print('starting', h.name())
 
-params = {'save_path': 'E://AuthAnimeDownload/', 'storage_mode': lt.storage_mode_t.storage_mode_sparse, 'ti': info}
-h = ses.add_torrent(params)
-
-s = h.status()
-while (not s.is_seeding):
+    while (not h.is_seed()):
         s = h.status()
-
         state_str = ['queued', 'checking', 'downloading metadata', \
-                'downloading', 'finished', 'seeding', 'allocating']
-        print '%.2f%% complete (down: %.1f kb/s up: %.1f kB/s peers: %d) %s' % \
-                (s.progress * 100, s.download_rate / 1000, s.upload_rate / 1000, \
-                s.num_peers, state_str[s.state])
-
+                     'downloading', 'finished', 'seeding', 'allocating', 'checking fastresume']
+        print('\r%.2f%% complete (down: %.1f kB/s up: %.1f kB/s peers: %d) %s' % \
+              (s.progress * 100, s.download_rate / 1000, s.upload_rate / 1000, \
+               s.num_peers, state_str[s.state]), end=' ')
+        alerts = ses.pop_alerts()
+        for a in alerts:
+            if a.category() & lt.alert.category_t.error_notification:
+                print(a)
+        sys.stdout.flush()
         time.sleep(1)
 
+    print(h.name(), 'complete')
+    return True;
+
+
+def main():
+    torrentfile = open("resource/xxx.torrent", "rb")
+    return downloadByTorrent(torrentfile.decode("utf-8"), "resource/")
+
+
+if __name__ == '__main__':
+    main()

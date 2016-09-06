@@ -33,12 +33,12 @@ def magnet2t(link, tfile):
 
 
 def main():
-    f = open('1.txt', 'r')
+    f = open('magnet_list.txt', 'r')
     magnet_list = f.read().split('\\n')
     f.close()
     for i in range(len(magnet_list)):
         if magnet_list[i] != '':
-            magnet2t(magnet_list[i], '%s.torrent' % str(i))
+            magnet2t(magnet_list[i], 'torrent/%s.torrent' % str(i))
 
 
 if __name__ == '__main__':
