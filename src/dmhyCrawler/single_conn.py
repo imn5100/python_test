@@ -24,15 +24,15 @@ port = 6379
 
 
 def SET(key, value):
-    execute_low_level("LPUSH", key, value, host=host, port=port)
+    return execute_low_level("LPUSH", key, value, host=host, port=port)
 
 
 def LPUSH(lkey, value):
-    execute_low_level("LPUSH", lkey, value, host=host, port=port)
+    return execute_low_level("LPUSH", lkey, value, host=host, port=port)
 
 
 def LREM(lkey, value):
-    execute_low_level("LREM", lkey, 1, value, host=host, port=port)
+    return execute_low_level("LREM", lkey, 1, value, host=host, port=port)
 
 
 def RPOPLPUSH(popKey, pushKey):
@@ -50,11 +50,11 @@ def HEXISTS(key, field):
 
 def HMSET(name, mapping):
     if not mapping:
-        return
+        return False
     items = []
     for pair in iteritems(mapping):
         items.extend(pair)
-    execute_low_level("HMSET", name, *items, host=host, port=port)
+    return execute_low_level("HMSET", name, *items, host=host, port=port)
 
 
 def HGET(key, field):
@@ -63,16 +63,14 @@ def HGET(key, field):
 
 
 def EXPIRE(key, senconds):
-    execute_low_level("EXPIRE", key, senconds, host=host, port=port)
+    return execute_low_level("EXPIRE", key, senconds, host=host, port=port)
 
 
 def EXPIREAT(key, timestamp):
-    execute_low_level("EXPIREAT", key, timestamp, host=host, port=port)
+    return execute_low_level("EXPIREAT", key, timestamp, host=host, port=port)
 
 
 # test
 if __name__ == '__main__':
     data = {"google": "www.google.com", "yahoo": "www.yahoo.com", "bing": "www.bing.com"}
-    # HMSET("site2", data)
-    LPUSH("list1", 1)
-    print RPOPLPUSH("list1", "list2")
+    HMSET("site2", data)

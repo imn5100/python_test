@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from DbOperator import DatabaseConnection
+import time
 
 
 class DmhyDataOperator(object):
@@ -8,20 +9,20 @@ class DmhyDataOperator(object):
         self.db = db
 
     def add_dmhydata(self, dmhydata):
-        sql = "insert into  dmhy(`time`, `classi`, `title`, `magnetLink`, `size`, `seedNum`, `downNum`, `comNum`, `publisher`) values(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        sql = "insert into  dmhy(`time`, `classi`, `title`, `magnetLink`, `size`, `seedNum`, `downNum`, `comNum`, `publisher`,`create_time`) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
         self.db.put(sql, (
             dmhydata.time, dmhydata.classi, dmhydata.title, dmhydata.magnetLink, dmhydata.size, dmhydata.sendNum,
-            dmhydata.downNum, dmhydata.comNum, dmhydata.publisher,))
+            dmhydata.downNum, dmhydata.comNum, dmhydata.publisher, dmhydata.createTime,))
 
     def add_dmhydata_list(self, dmhy_data_list):
         if len(dmhy_data_list) <= 0:
             return
-        sql = "insert into  dmhy(`time`, `classi`, `title`, `magnetLink`, `size`, `seedNum`, `downNum`, `comNum`, `publisher`) values(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        sql = "insert into  dmhy(`time`, `classi`, `title`, `magnetLink`, `size`, `seedNum`, `downNum`, `comNum`, `publisher`,`create_time`) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
         params = []
         for dmhydata in dmhy_data_list:
             params.append((
                 dmhydata.time, dmhydata.classi, dmhydata.title, dmhydata.magnetLink, dmhydata.size, dmhydata.sendNum,
-                dmhydata.downNum, dmhydata.comNum, dmhydata.publisher))
+                dmhydata.downNum, dmhydata.comNum, dmhydata.publisher, dmhydata.createTime))
         self.db.put_many(sql, params)
 
     def getby_title(self, title):
@@ -62,13 +63,19 @@ class DmhyDataOperator(object):
 
 
 class DmhyData(object):
-    def __init__(self):
+    def __init__(self, *args):
         self.sendNum = '0'
         self.downNum = '0'
         self.comNum = '0'
         self.publisher = ''
+        # 获取毫秒级别时间戳
+        self.createTime = long(time.time() * 1000)
+        if len(args) > 0:
+            data = args[0];
+            if data and len(data) > 9 and (isinstance(data, list) or isinstance(data, tuple)):
+                self.init(data)
 
-    def __init__(self, data):
+    def init(self, data):
         self.id = data[0]
         self.time = data[1]
         self.classi = data[2]
@@ -85,6 +92,13 @@ class DmhyData(object):
 def set_int(intNum):
     try:
         return int(intNum)
+    except:
+        return 0
+
+
+def set_Long(longNum):
+    try:
+        return long(longNum)
     except:
         return 0
 
