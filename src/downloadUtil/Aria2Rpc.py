@@ -10,8 +10,12 @@ class Aria2JsonRpc(object):
         self.rpc_url = rpc_url
         self.arai2_path = arai2_path
 
-    def openAria2RPC(self):
-        os.system("\"" + self.arai2_path + "aria2c\"  --enable-rpc --rpc-listen-all=true --rpc-allow-origin-all -c")
+    def startAria2Rpc(self):
+        file = open("startAria2Rpc.bat", "w")
+        newcmd = "\"" + self.arai2_path + "aria2c.exe\"  --enable-rpc --rpc-listen-all=true --rpc-allow-origin-all -c";
+        file.write(newcmd)
+        file.close()
+        os.startfile((os.getcwd() + "\\startAria2Rpc.bat"))
 
     # 构造json请求头
     def buildHeader(self):
@@ -30,9 +34,20 @@ class Aria2JsonRpc(object):
         tm = long(time.time() * 1000)
         url = rpc_url % str(tm)
         r = requests.post(url, None, payload, headers=self.buildHeader());
-        print(str(payload))
-        print r.json()
+        print (r.json())
         return r.status_code;
+
+    def isAlive(self):
+        payload = {"jsonrpc": "2.0", "method": "aria2.tellActive", "id": 1}
+        tm = long(time.time() * 1000)
+        url = rpc_url % str(tm)
+        try:
+            r = requests.get(url, payload, headers=self.buildHeader());
+            print(r.json())
+            return r.status_code == 200
+        except Exception, e:
+            print (e.message)
+            return False
 
     def addUri(self, url, dir=None, out=None):
         params = [];
@@ -41,9 +56,9 @@ class Aria2JsonRpc(object):
         params.append(download_config)
         print(self.execuetJsonRpcCmd("aria2.addUri", params))
 
-    #官方例子有BUG 暂时不用
+
     def addTorrent(self, path, dir=None, out=None):
-        bits =  open(path).read();
+        bits = open(path,"rb").read();
         torrent = base64.b64encode(bits)
         params = [];
         download_config = {"dir": dir, "out": out}
@@ -56,8 +71,10 @@ class Aria2JsonRpc(object):
 if __name__ == '__main__':
     rpc_url = "http://localhost:6800/jsonrpc?tm=%s"
     aria2_path = "D:/Program Files/aria2-1.27.1/"
-    rpcClient = Aria2JsonRpc(rpc_url, aria2_path);
+    rpcClient = Aria2JsonRpc(rpc_url, aria2_path)
     # 下载链接
-    download_url = ["magnet:?xt=urn:btih:JLFNIBG6IMJAIL2TXOF6GGQB3EJ2KP3V&dn=&tr=http%3A%2F%2F208.67.16.113%3A8000%2Fannounce&tr=udp%3A%2F%2F208.67.16.113%3A8000%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=http%3A%2F%2Ftracker.publicbt.com%3A80%2Fannounce&tr=http%3A%2F%2Ftracker.prq.to%2Fannounce&tr=http%3A%2F%2Fopen.acgtracker.com%3A1096%2Fannounce&tr=http%3A%2F%2Ftr.bangumi.moe%3A6969%2Fannounce&tr=https%3A%2F%2Ft-115.rhcloud.com%2Fonly_for_ylbud&tr=http%3A%2F%2Fbtfile.sdo.com%3A6961%2Fannounce&tr=http%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&tr=https%3A%2F%2Ftr.bangumi.moe%3A9696%2Fannounce&tr=http%3A%2F%2Fmgtracker.org%3A2710%2Fannounce&tr=http%3A%2F%2Ft.acg.rip%3A6699%2Fannounce&tr=http%3A%2F%2Fshare.camoe.cn%3A8080%2Fannounce&tr=http%3A%2F%2Fopen.nyaatorrents.info%3A6544%2Fannounce&tr=http%3A%2F%2Ftracker.tfile.me%2Fannounce&tr=http%3A%2F%2Fpubt.net%3A2710%2Fannounce&tr=http%3A%2F%2Ftracker1.itzmx.com%3A8080%2Fannounce&tr=http%3A%2F%2Ftracker2.itzmx.com%3A6961%2Fannounce&tr=http%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&tr=http%3A%2F%2Ftracker4.itzmx.com%3A2710%2Fannounce&tr=http%3A%2F%2Ftracker.skyts.net%3A6969%2Fannounce&tr=http%3A%2F%2Ft.nyaatracker.com%2Fannounce&tr=http%3A%2F%2Ftorrentsmd.com%3A8080%2Fannounce&tr=http%3A%2F%2Fretracker.krs-ix.ru%3A80%2Fannounce&tr=http%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce"]
-    rpcClient.addUri(download_url, "E:/download/aria2test");
-    # rpcClient.addTorrent("E:/download/code11.torrent", "E:/download/aria2test", "torrenttest");
+    rpcClient.isAlive()
+    if not rpcClient.isAlive():
+        rpcClient.startAria2Rpc()
+        time.sleep(3)
+    rpcClient.addTorrent("E:/download/code11.torrent", "E:/download/aria2test", "torrenttest");

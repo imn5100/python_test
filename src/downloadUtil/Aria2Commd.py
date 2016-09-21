@@ -1,35 +1,19 @@
 # -*- coding: utf-8 -*-
-import os
 import subprocess
 
 
 class Aria2DownloadTool:
-    def __init__(self, **kwargs):
-        self.gdriveid = str(kwargs['client'].get_gdriveid())
-        self.url = kwargs['url']
-        self.path = kwargs['path']
-        self.size = kwargs['size']
-        self.resuming = kwargs.get('resuming')
+    def __init__(self, aria2_path):
+        self.aria2_path = aria2_path
 
-    def finished(self):
-        assert os.path.getsize(self.path) <= self.size, 'existing file (%s) bigger than expected (%s)' % (
-            os.path.getsize(self.path), self.size)
-        return os.path.getsize(self.path) == self.size and not os.path.exists(self.path + '.aria2')
-
-    def __call__(self):
-        gdriveid = self.gdriveid
-        download_url = self.url
-        path = self.path
-        resuming = self.resuming
-        dir = os.path.dirname(path)
-        filename = os.path.basename(path)
-        aria2_opts = ['aria2c', '--header=Cookie: gdriveid=' + gdriveid, download_url, '--out', filename,
-                      '--file-allocation=none']
+    def download(self, download_url, filename=None, dir=None):
+        aria2_opts = [self.aria2_path + '/aria2c', download_url]
+        if filename:
+            aria2_opts.extend(('--out', filename))
         if dir:
-            aria2_opts.extend(('--dir', dir))
-        if resuming:
-            aria2_opts.append('-c')
-        exit_code = subprocess.call(aria2_opts)
+            aria2_opts.append(('--dir ', dir))
+        # 这里只负责提交下载任务使用Popen 不阻塞等待返回，实际下载进度由YAAW维护。
+        exit_code = subprocess.call(aria2_opts, shell=True)
         if exit_code != 0:
             raise Exception('aria2c exited abnormally')
 
@@ -40,8 +24,9 @@ def openAria2RPC(aria2_path):
 
 if __name__ == '__main__':
     aria2_path = "D:\\Program Files\\aria2-1.27.1"
-    download_url = "https://codeload.github.com/imn5100/autoDanime/zip/master"
-    filename = "master.zip";
-    dir = "E:/download/aria2test";
-    subprocess.Popen(["D:\\Program Files\\aria2-1.27.1\\aria2c", download_url, "--out", filename, "--dir", dir],
-                     shell=True)
+    # download_url = "https://codeload.github.com/imn5100/autoDanime/zip/master"
+    # filename = "master.zip";
+    # dir = "E:/download/aria2test";
+    # tool = Aria2DownloadTool(aria2_path)
+    # tool.download(download_url, filename, dir);
+    openAria2RPC(aria2_path)
