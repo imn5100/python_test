@@ -39,7 +39,7 @@ def analysisHtml(text):
     soup = BeautifulSoup(text)
     body = soup.find('tbody')
     dmhy_datas = []
-    #统一同一批次数据插入时间
+    # 统一同一批次数据插入时间
     createTime = long(time.time() * 1000)
     for tr in body.findAll("tr"):
         tds = tr.findAll("td")
@@ -55,17 +55,17 @@ def analysisHtml(text):
         size = tds[4].text
         dmhy.size = (size)
         sendNum = tds[5].find("span").text
-        dmhy.sendNum = (sendNum if sendNum.strip() != '' else '0')
+        dmhy.sendNum = set_int(sendNum)
         downNum = tds[6].find("span").text
-        dmhy.downNum = (downNum if downNum.strip() != '' else '0')
+        dmhy.downNum = set_int(downNum)
         comNum = tds[7].text
-        dmhy.comNum = (comNum if comNum.strip() != '' else '0')
+        dmhy.comNum = set_int(comNum)
         publisher = tds[8].find("a").text
         dmhy.publisher = (publisher if publisher.strip() != ''else "")
         dmhy.createTime = createTime
         dmhy_datas.append(dmhy)
         print(
-            "time:" + dmhy.time + " classi:" + dmhy.classi + " title:" + dmhy.title + " magnetLink:" + dmhy.magnetLink + " size:" + dmhy.size + " sendNum:" + dmhy.sendNum + " downNum:" + dmhy.downNum + " comNum:" + dmhy.comNum + " publisher:" + dmhy.publisher + " createTime:" + str(
+            "time:" + dmhy.time + " classi:" + dmhy.classi + " title:" + dmhy.title + " magnetLink:" + dmhy.magnetLink + " size:" + dmhy.size + " sendNum:" + str(dmhy.sendNum) + " downNum:" + str(dmhy.downNum) + " comNum:" + str(dmhy.comNum) + " publisher:" + dmhy.publisher + " createTime:" + str(
                     dmhy.createTime))
     return dmhy_datas
 
@@ -84,12 +84,7 @@ def filter_datas(dmhy_datas):
     return {"add_list": add_list, "update_list": update_list, "add_map": add_map}
 
 
-if __name__ == '__main__':
-    page=1
-    keyword=urllib.pathname2url("")
-    searchUrl = "http://share.dmhy.org/topics/list/page/%u?keyword=%s" % (1, keyword);
-    text = getDMHYHtml(searchUrl)
-    dmhydatas = analysisHtml(text)
+def save_db(dmhydatas):
     db = DbOperator.DatabaseConnection("127.0.0.1", user="root", passwd='xlsw', db='test')
     dmop = DmhyDataOperator(db)
     data_map = filter_datas(dmhydatas)
@@ -107,3 +102,12 @@ if __name__ == '__main__':
     if data_map["add_map"]:
         if single_conn.HMSET(DMHY_MAP_TITLES_MAGNET, data_map["add_map"]):
             dmop.add_dmhydata_list(data_map["add_list"])
+
+
+if __name__ == '__main__':
+    page = 1
+    keyword = urllib.pathname2url("")
+    searchUrl = "http://share.dmhy.org/topics/list/page/%u?keyword=%s" % (1, keyword);
+    text = getDMHYHtml(searchUrl)
+    dmhydatas = analysisHtml(text)
+    save_db(dmhydatas);
