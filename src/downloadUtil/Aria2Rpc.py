@@ -12,7 +12,7 @@ class Aria2JsonRpc(object):
 
     def startAria2Rpc(self):
         file = open("startAria2Rpc.bat", "w")
-        newcmd = "\"" + self.arai2_path + "aria2c.exe\"  --enable-rpc --rpc-listen-all=true --rpc-allow-origin-all -c";
+        newcmd = "\"" + self.arai2_path + "aria2c.exe\"  --enable-rpc --rpc-listen-all=true --rpc-allow-origin-all -c"
         file.write(newcmd)
         file.close()
         os.startfile((os.getcwd() + "\\startAria2Rpc.bat"))
@@ -33,16 +33,16 @@ class Aria2JsonRpc(object):
         payload = {"jsonrpc": "2.0", "method": method, "id": 1, "params": param}
         tm = long(time.time() * 1000)
         url = rpc_url % str(tm)
-        r = requests.post(url, None, payload, headers=self.buildHeader());
+        r = requests.post(url, None, payload, headers=self.buildHeader())
         print (r.json())
-        return r.status_code;
+        return r.status_code
 
     def isAlive(self):
         payload = {"jsonrpc": "2.0", "method": "aria2.tellActive", "id": 1}
         tm = long(time.time() * 1000)
         url = rpc_url % str(tm)
         try:
-            r = requests.get(url, payload, headers=self.buildHeader());
+            r = requests.get(url, payload, headers=self.buildHeader())
             print(r.json())
             return r.status_code == 200
         except Exception, e:
@@ -50,20 +50,20 @@ class Aria2JsonRpc(object):
             return False
 
     def addUri(self, url, dir=None, out=None):
-        params = [];
+        params = []
         download_config = {"dir": dir, "out": out}
-        params.append(url);
+        params.append(url)
         params.append(download_config)
         print(self.execuetJsonRpcCmd("aria2.addUri", params))
 
 
     def addTorrent(self, path, dir=None, out=None):
-        bits = open(path,"rb").read();
+        bits = open(path,"rb").read()
         torrent = base64.b64encode(bits)
-        params = [];
+        params = []
         download_config = {"dir": dir, "out": out}
-        params.append(torrent);
-        params.append([]);
+        params.append(torrent)
+        params.append([])
         params.append(download_config)
         print(self.execuetJsonRpcCmd("aria2.addTorrent", params))
 
@@ -77,4 +77,4 @@ if __name__ == '__main__':
     if not rpcClient.isAlive():
         rpcClient.startAria2Rpc()
         time.sleep(3)
-    rpcClient.addTorrent("E:/download/code11.torrent", "E:/download/aria2test", "torrenttest");
+    rpcClient.addTorrent("E:/download/code11.torrent", "E:/download/aria2test", "torrenttest")
