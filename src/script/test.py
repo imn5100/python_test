@@ -1,8 +1,11 @@
 # -*- coding=utf-8 -*-
+import codecs
+import hashlib
 import json
+import os
+import subprocess
 
 import requests
-import hashlib
 
 from Aria2Rpc import Aria2JsonRpc
 
@@ -56,9 +59,41 @@ def download(msg_data):
             return None
 
 
-if __name__ == '__main__':
+def test_download():
     s = auth(user_data)
     msg_data = s.get(consumer_url, params={"topic": "download"})
     msg_id = download(msg_data.text)
     if msg_id:
         s.get(callback_url, params={"id": msg_id, "type": STATUS_MAP["over"]})
+
+
+def build_file(resultobj):
+    if resultobj["code"] == 200:
+        contents = resultobj["data"]["contents"]
+        filename = "exctmp/python_%s.py" % resultobj["data"]["id"]
+        exc_file = codecs.open(filename, "w", encoding='utf-8')
+        exc_file.write(contents)
+        exc_file.close()
+        return filename
+    else:
+        print(resultobj)
+        return None
+
+
+def test_python():
+    s = auth(user_data)
+    msg_data = s.get(consumer_url, params={"topic": "python"})
+    try:
+        resultobj = json.loads(msg_data.text)
+        filename = build_file(resultobj)
+        if filename:
+            file_path = os.path.abspath(filename)
+            subprocess.call("python " + file_path)
+            s.get(callback_url, params={"id": resultobj["data"]["id"], "type": STATUS_MAP["over"]})
+    except Exception, e:
+        print(e)
+        s.get(callback_url, params={"id": resultobj["data"]["id"], "type": STATUS_MAP["fail"]})
+
+
+if __name__ == '__main__':
+    test_python()
