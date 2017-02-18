@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
+import urllib
+
+import redis
 import requests
 from BeautifulSoup import BeautifulSoup
-import redis
+
+import DbOperator
 import single_conn
 from DmhyDataOperator import *
-import DbOperator
-import time
-import urllib
 
 MAGNET_QUEUE = "Magnet_Queue"
 DOWNLOAD_START = "Download_Start_%s"
 DMHY_MAP_TITLES_MAGNET = "DMHY_Map_Titles_Magnet"
 
 
-# 这里http请求存在超时问题。10秒 如果url无响应，则抛出timeout异常。（不包括响应的时间）
 def getDMHYHtml(url):
     r = requests.get(url, headers=buildHeader(), timeout=10)
     return r.text
@@ -65,7 +65,9 @@ def analysisHtml(text):
         dmhy.createTime = createTime
         dmhy_datas.append(dmhy)
         print(
-            "time:" + dmhy.time + " classi:" + dmhy.classi + " title:" + dmhy.title + " magnetLink:" + dmhy.magnetLink + " size:" + dmhy.size + " sendNum:" + str(dmhy.sendNum) + " downNum:" + str(dmhy.downNum) + " comNum:" + str(dmhy.comNum) + " publisher:" + dmhy.publisher + " createTime:" + str(
+            "time:" + dmhy.time + " classi:" + dmhy.classi + " title:" + dmhy.title + " magnetLink:" + dmhy.magnetLink + " size:" + dmhy.size + " sendNum:" + str(
+                dmhy.sendNum) + " downNum:" + str(dmhy.downNum) + " comNum:" + str(
+                dmhy.comNum) + " publisher:" + dmhy.publisher + " createTime:" + str(
                     dmhy.createTime))
     return dmhy_datas
 
@@ -110,4 +112,5 @@ if __name__ == '__main__':
     searchUrl = "http://share.dmhy.org/topics/list/page/%u?keyword=%s" % (1, keyword);
     text = getDMHYHtml(searchUrl)
     dmhydatas = analysisHtml(text)
-    save_db(dmhydatas);
+    print(len(dmhydatas))
+    # save_db(dmhydatas);
