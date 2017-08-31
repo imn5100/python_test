@@ -104,4 +104,7 @@ if __name__ == '__main__':
     searchUrl = "https://share.dmhy.org/topics/list/page/%u?keyword=%s" % (1, keyword);
     text = getDMHYHtml(searchUrl)
     dmhydatas = analysisHtml(text)
-    print (dmhydatas)
+    # 倒置数组，以显示最新更新
+    dmhydatas.reverse()
+    for data in dmhydatas:
+        print (str(data.time) + ":" + data.title)
