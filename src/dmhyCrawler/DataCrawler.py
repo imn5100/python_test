@@ -10,7 +10,7 @@ from BeautifulSoup import BeautifulSoup
 def set_int(intNum):
     try:
         return int(intNum)
-    except:
+    except Exception:
         return 0
 
 

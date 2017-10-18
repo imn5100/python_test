@@ -1,4 +1,14 @@
 # -*- coding: utf-8 -*-
+from BeautifulSoup import BeautifulSoup
+from hyper import HTTPConnection
+
+
+# 避免类型转换异常
+def set_int(intNum):
+    try:
+        return int(intNum)
+    except Exception:
+        return 0
 
 
 def build_headers():
@@ -12,46 +22,65 @@ def build_headers():
             }
 
 
-def get_acgnx():
-    from hyper import HTTPConnection
+def analysisHtml(text):
+    soup = BeautifulSoup(text)
+    body = soup.find('tbody', id="data_list")
+    datas = []
+    for tr in body.findAll("tr"):
+        tds = tr.findAll("td")
+        data = {}
+        data['time'] = tds[0]['title']
+        data['classi'] = tds[1].find("font").text
+        data['title'] = tds[2].find("a", target="_blank").text
+        data['size'] = tds[3].text
+        data['magnet_link'] = tds[4].find("a")["href"]
 
+        data['sendNum'] = set_int(tds[5].find("span").text)
+        data['downNum'] = set_int(tds[6].find("span").text)
+        data['comNum'] = set_int(tds[7].find("span").text)
+
+        publisher = tds[8].find("a").text
+        data['publisher'] = (publisher if publisher.strip() != ''else "")
+
+        datas.append(data)
+        print(
+            "time:" + data['time'] + " classi:" + data['classi'] + " title:" + data['title'] + " magnetLink:" + data[
+                'magnet_link'] + " size:" + data['size'] + " sendNum:" + str(
+                data['sendNum']) + " downNum:" + str(data['downNum']) + " comNum:" + str(
+                data['comNum']) + " publisher:" + data['publisher'])
+    return datas
+
+
+def get_acgnx_index():
     conn = HTTPConnection("share.acgnx.se", port=443)
     headers = build_headers()
     conn.request('GET', '/', headers=headers)
     resp = conn.get_response()
 
-    print(resp.read())
-    print(resp.status)
-    print(resp.headers)
-
-    print (resp.headers['set-cookie'])
     for cookie in resp.headers['set-cookie']:
         headers['cookie'] = headers['cookie'] + cookie.split(';')[0] + "; "
     print (headers['cookie'])
     conn.request('GET', '/', headers=headers)
     resp = conn.get_response()
-    print(resp.read())
-    print(resp.status)
-    print(resp.headers)
-
-
-if __name__ == '__main__':
-    # get_acgnx()
-    response_js = "<!doctype html><html><head><meta charset=\"utf-8\"><meta http-equiv=\"pragma\" " \
-                  "content=\"no-cache\"><meta http-equiv=\"cache-control\" content=\"no-store\"><script " \
-                  "type=\"text/javascript\">eval(function(p,a,c,k,e,r){e=function(c){return c.toString(a)};if(" \
-                  "!''.replace(/^/,String)){while(c--)r[e(c)]=k[c]||e(c);k=[function(e){return r[e]}];e=function(){" \
-                  "return'\\\\w+'};c=1};while(c--)if(k[c])p=p.replace(new RegExp('\\\\b'+e(c)+'\\\\b','g')," \
-                  "k[c]);return p}('f 8={2:\"k\",c:\"j\"};6 e(a){g 0<4.2.7&&(3=4.2.9(a+\"=\"),-1!=3)?(3=3+a.7+1," \
-                  "5=4.2.9(\";\",3),-1==5&&(5=4.2.7),h(4.2.i(3,5))):\"\"}6 d(a,b){4.2=a+\"=\"+l(b)+\";m=/;\"}6 n(){d(" \
-                  "\"o\",8.2);p.q=8.c};',27,27," \
-                  "'||cookie|c_start|document|c_end|function|length|data|indexOf|||uri|setCookie|getCookie|var|return" \
-                  "|unescape|substring|https://share.acgnx.se/|4ddf4480c5293b125ad0d312832c6593|escape|path|jump" \
-                  "|d196174838d710e1e8f850c3569b33ed|window|location'.split('|'),0,{}))</script></head><body " \
-                  "onLoad=\"javascript:jump()\"></body></html> "
+    response_js = resp.read()
 
     key_index = response_js.find('jump|')
     value_index = response_js.find("|escape")
     key = response_js[key_index + 5:key_index + 5 + 32]
     value = response_js[value_index - 32: value_index]
-    print (key + ":" + value)
+    new_cookie = key + "=" + value + ";"
+    headers['cookie'] = headers['cookie'] + new_cookie
+    print (headers['cookie'])
+
+    conn.request('GET', '/', headers=headers)
+    resp = conn.get_response()
+    return resp.read()
+
+
+if __name__ == '__main__':
+    # html = open("acgnx.html").read()
+    html = get_acgnx_index()
+    datas = analysisHtml(html)
+    datas.reverse()
+    for data in datas:
+        print (str(data['time']) + " " + data['classi'] + ":" + data['title'])
