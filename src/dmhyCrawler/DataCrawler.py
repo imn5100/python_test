@@ -107,7 +107,7 @@ def read_dmhy():
     # 倒置数组，以显示最新更新
     dmhydatas.reverse()
     for data in dmhydatas:
-        print (str(data.time) + ":" + data.title)
+        print (str(data.time) + " " + data.classi + ":" + data.title)
 
 
 if __name__ == '__main__':
