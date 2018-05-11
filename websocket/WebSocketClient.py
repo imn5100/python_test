@@ -1,10 +1,10 @@
 # -*- coding=utf-8 -*-
-import codecs
 import json
 import urlparse
+from urllib import urlencode
 
 from tornado import escape, gen, httpclient, httputil, ioloop, websocket
-from urllib import urlencode
+
 from Frame import Frame
 
 APPLICATION_JSON = 'application/json'
