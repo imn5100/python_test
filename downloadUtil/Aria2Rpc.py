@@ -6,10 +6,10 @@ import base64
 
 
 class Aria2JsonRpc(object):
-    def __init__(self, rpc_url, arai2_path):
+    def __init__(self, rpc_url, arai2_path,check=False):
         self.rpc_url = rpc_url
         self.arai2_path = arai2_path
-        if not self.isAlive():
+        if check and not self.isAlive():
             self.startAria2Rpc()
 
     def startAria2Rpc(self):
