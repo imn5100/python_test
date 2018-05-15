@@ -1,6 +1,8 @@
 # -*- coding=utf-8 -*-
 import json
+import string
 import urlparse
+from random import Random
 from urllib import urlencode
 
 from tornado import escape, gen, httpclient, httputil, ioloop, websocket
@@ -23,6 +25,7 @@ CMD_STOMP = 'STOMP'
 CMD_SEND = 'SEND'
 CMD_SUBSCRIBE = 'SUBSCRIBE'
 CMD_UNSUBSCRIBE = 'UNSUBSCRIBE'
+random = Random()
 
 
 def add_url_params(url, params):
@@ -100,9 +103,13 @@ class DoloresStompWebSocketClient(WebSocketClient):
         self.driver_id = driver_id
         self.user_id = user_id
         self.sub_topic = '/dolores/driver/%s/%s' % (self.user_id, self.driver_id)
+        self.url = 'ws://wst.shawblog.me/dolores/' + str(random.randint(100, 999)) + "/" + ''.join(
+            random.sample(string.ascii_letters, 8)) + '/websocket'
 
-    def connect(self, url):
-        url = add_url_params(url, {'token': self.token})
+    def connect(self, url=None):
+        if url is None:
+            url = add_url_params(self.url, {'token': self.token})
+        print(url)
         WebSocketClient.connect(self, url)
 
     def _on_message(self, msg):
@@ -137,9 +144,11 @@ class DoloresStompWebSocketClient(WebSocketClient):
 
 
 def main():
-    token = '4a08398861816f734436c6b10f1d1493'
-    client = DoloresStompWebSocketClient(token, 'fe73bd5d5e173c80e6ec7c23694a3af802a66c75008a2cb4', 1)
-    client.connect('ws://wst.shawblog.me/dolores/873/qdqavh3w/websocket')
+    token = 'b8830df06a0b7fc585d1d0033751eccf'
+    uid = 1
+    device_id = 'fe73bd5d5e173c80e6ec7c23694a3af802a66c75008a2cb4'
+    client = DoloresStompWebSocketClient(token, device_id, uid)
+    client.connect()
     try:
         ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
