@@ -1,40 +1,33 @@
 # -*- coding: utf-8 -*-
-import requests
-import os
-import time
+
 import base64
+import time
+
+import requests
 
 
 class Aria2JsonRpc(object):
-    def __init__(self, rpc_url, arai2_path, check=False):
-        self.rpc_url = rpc_url
-        self.arai2_path = arai2_path
+    def __init__(self, rpc_url, check=True):
+        if rpc_url is None:
+            self.rpc_url = 'http://localhost:6800/jsonrpc?tm=%s'
+        else:
+            self.rpc_url = rpc_url
         if check and not self.isAlive():
-            self.startAria2Rpc()
-
-    def startAria2Rpc(self):
-        launch_file = open("startAria2Rpc.bat", "w")
-        new_cmd = "\"" + self.arai2_path + "aria2c.exe\"  --enable-rpc --rpc-listen-all=true --rpc-allow-origin-all -c"
-        launch_file.write(new_cmd)
-        launch_file.close()
-        # aria2 使用cmd打开
-        os.startfile((os.getcwd() + "\\startAria2Rpc.bat"))
-        # 进程挂起3秒保证aria2打开完毕
-        time.sleep(3)
+            raise Exception("Please start aria2c rpc service")
 
     def execuetJsonRpcCmd(self, method, param=None):
         payload = {"jsonrpc": "2.0", "method": method, "id": 1, "params": param}
         payloads = [payload]
-        tm = long(time.time() * 1000)
+        tm = (time.time() * 1000)
         url = self.rpc_url % str(tm)
-        print(payloads)
+        print("Aria2 execute:" + str(payloads))
         r = requests.post(url, None, payloads)
-        print(r.text)
-        return r.status_code
+        print("Aria2 back:" + r.text)
+        return r.status_code == 200
 
     def isAlive(self):
         payload = {"jsonrpc": "2.0", "method": "aria2.tellActive", "id": 1}
-        tm = long(time.time() * 1000)
+        tm = (time.time() * 1000)
         url = self.rpc_url % str(tm)
         try:
             r = requests.get(url, payload)
@@ -42,19 +35,19 @@ class Aria2JsonRpc(object):
         except Exception:
             return False
 
-    """
-    [{"jsonrpc":"2.0","method":"aria2.addUri","id":1,"params":[["http://localhost:9010/login"],{"split":"16","max-connection-per-server":"16","seed-ratio":"0","header":"Cookie: BIDUPSID: 43E72592030CC18F1D57EE49732F7A9D\nHost:bilibili.com\nRefer:test"}]}]
-    """
-
-    def addUris(self, urls, dir=None, out=None, header=None, conn=16):
+    # urls 是url数组 否则传参错误 header \n分隔不同头
+    def addUris(self, urls, dir=None, out=None, headers=None, conn=16):
         params = []
         download_config = {}
         if dir:
             download_config["dir"] = dir
         if out:
             download_config["out"] = out
-        if header:
-            download_config['header'] = header
+        if headers:
+            headers_str = ''
+            for (k, v) in headers.items():
+                headers_str += str(k) + ": " + v + "\n"
+            download_config['header'] = headers_str
         download_config['split'] = str(conn)
         download_config['max-connection-per-server'] = str(conn)
         params.append(urls)
@@ -69,13 +62,4 @@ class Aria2JsonRpc(object):
         params.append(torrent)
         params.append([])
         params.append(download_config)
-        print(self.execuetJsonRpcCmd("aria2.addTorrent", params))
-
-
-if __name__ == '__main__':
-    magnet = "magnet:?xt=urn:btih:56B4ZGEZXMWY3L54JFNEBQY6O7VS2KY5"
-    rpc_url = "http://localhost:6800/jsonrpc?tm=%s"
-    aria2_path = "D:/Program Files/aria2-1.27.1/"
-    rpcClient = Aria2JsonRpc(rpc_url, aria2_path)
-    rpcClient.addUris([magnet])
-    rpcClient.addTorrent("E:/download/响02.torrent")
+        return self.execuetJsonRpcCmd("aria2.addTorrent", params)
