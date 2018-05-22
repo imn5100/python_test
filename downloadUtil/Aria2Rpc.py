@@ -6,7 +6,7 @@ import base64
 
 
 class Aria2JsonRpc(object):
-    def __init__(self, rpc_url, arai2_path,check=False):
+    def __init__(self, rpc_url, arai2_path, check=False):
         self.rpc_url = rpc_url
         self.arai2_path = arai2_path
         if check and not self.isAlive():
@@ -42,13 +42,21 @@ class Aria2JsonRpc(object):
         except Exception:
             return False
 
-    def addUris(self, urls, dir=None, out=None):
+    """
+    [{"jsonrpc":"2.0","method":"aria2.addUri","id":1,"params":[["http://localhost:9010/login"],{"split":"16","max-connection-per-server":"16","seed-ratio":"0","header":"Cookie: BIDUPSID: 43E72592030CC18F1D57EE49732F7A9D\nHost:bilibili.com\nRefer:test"}]}]
+    """
+
+    def addUris(self, urls, dir=None, out=None, header=None, conn=16):
         params = []
         download_config = {}
         if dir:
             download_config["dir"] = dir
         if out:
             download_config["out"] = out
+        if header:
+            download_config['header'] = header
+        download_config['split'] = str(conn)
+        download_config['max-connection-per-server'] = str(conn)
         params.append(urls)
         params.append(download_config)
         print(self.execuetJsonRpcCmd("aria2.addUri", params))
